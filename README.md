@@ -1,8 +1,8 @@
-# DesafioCB
+# Desafio engenheiro de dados CB LAB
 
 ## Desafio 1
 
-### 1. Descrição do esquema JSON 
+## 1. Descrição do esquema JSON 
 
 O esquema do JSON representa um registro detalhado de transações. 
 A estrutura geral contém dados da data de geração do registro, um identificador da loja e um lista (array) referente a comanda. 
@@ -127,7 +127,7 @@ Cada objeto dentro do array, detalha um pedido.
 
     "aggTtl": integer -> Valor total agregado do item (preço unitário x quantidade).
 
-    "aggQty": integer -> Quantidade.
+    "aggQty": integer -> Quantidade agregada.
 
     "chkEmpId": integer -> Identificador do funcionário que registrou o item.
 
@@ -148,3 +148,51 @@ Cada objeto dentro do array, detalha um pedido.
     "activeTaxes": string -> Impostos ativos. Vinculado ao imposto "taxNum": 28.
 
     "prcLvl": integer -> Nível de preço. Indica os diferentes preços pro mesmo produto, como o preço de happy hour ou preço normal.
+
+
+## 3. Descrição da abordagem escolhida 
+
+A abordagem escolhida para a modelagem de dados foi o Esquema Estrela/Floco de neve, que consiste em organizar os dados em tabelas Fato, que contêm as métricas numéricas do negócio, e as tabelas Dimensão que armazenam os atributos descritivos que fornecem contexto. A estrutura recebe esse nome pois a tabela Fato é colocada no centro e as dimensões irradiando dela.
+
+### Tabelas Fato
+
+Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os Itens (guestCheckLineItemId). 
+
+* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), valor total da comanda (ttl_comanda), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
+
+* **fato_item**: Contém uma linha para cada item vendido. Suas métricas incluem o número do centro de receita (num_centro_receita), datas de atualização (dh_atu), número da estação de trabalho (num_estacao_trabalho), o valor e quantidade de exibição do item (ttl_item_exib, qtd_item_exib), valor e quantidade agregado do item (ttl_item_agg, qtd_item_agg), discount (desconto) e o errorCode (codigo_erro) 
+
+### Tabelas Dimensão
+
+* dim_mesas: Descreve os dados das mesas, como o número, nome da mesa e quantidade de assentos.
+
+* dim_data_comercio: Descreve a data de inicio e fechamento do dia comercial.
+
+* dim_funcionario: Descreve o funcionário associado à comanda.
+
+* dim_comanda: Descreve os atributos da comanda em si, como o seu número (chkNum), a data e hora de abertura e fechamento da comanda, status da comanda (ex.: Aberta - False, Fechada - True), número do tipo e categoria do pedido, número de rodadas de serviço e quantidade de vezes que a comanda foi impressa.
+
+* dim_local: Descreve o local, com a referência e a data e hora de geração dos dados.
+
+* dim_valores: Descreve os valores da comanda, como o subtotal, o valor total de desconto e o total de vendas sem imposto.
+
+* dim_taxas: Descreve as taxas associadas aos valores e aos itens. Isso é feito usando o valor total do item, o valor total do imposto, a aliquota e o tipo de calculo.
+
+* dim_detalhe_item: Descreve os atributos do item em si. Possui o número do detalhe do tipo e da categoria do item, as datas de atualização e o número da rodada de serviço que o item foi pedido.
+
+* dim_funcionario_item: Descreve os funcionários que estão associados ao cadastro do item
+
+* dim_item_menu: Descreve cada item de menu vendido.
+
+### Relações
+
+Como o JSON fornecido corresponde a um determinado pedido com um único item, referente a um único item de menu, a tabela fato_item é considerada uma tabela ponte entre a fato_comandas e a dim_detalhe_item. Pois uma comanda pode ter vários itens e cada item supostamente pode ser pedido em outras comandas, e esse mesmo item vai sempre corresponder a um único item de menu.
+
+Abaixo está a representação visual da estrutura das tabelas.
+![alt text](<Captura de tela 2025-07-28 133759.png>)
+
+### Justificativa
+
+Escolhi o esquema Estrela/Floco de neve pois esses modelos foram projetados pensando em otimizar consultas analiticas e em serem eficazes para responder perguntas de negócio. Isso faz com que operações de agregação como "SUM", "COUNT" e junções "JOIN" sejam mais rápidas e perfomáticas, acelerando e facilitando a exploração de grandes volumes de dados.
+
+E também é um modelo que permite grande escalabilidade e manutenibilidade do banco de dados, pois se for necessário adicionar algum campo ou algum atributo, é só adicionar uma nova coluna e incluir a sua chave na tabela fato, sem precisar analisar e reestruturar as tabelas existentes.
