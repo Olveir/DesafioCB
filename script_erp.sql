@@ -28,22 +28,12 @@ CREATE TABLE IF NOT EXISTS dim_comanda (
 );
 
 CREATE TABLE IF NOT EXISTS dim_taxas (
-	id_taxa INT PRIMARY KEY,
-    ttl_item DECIMAL(10,2),
-    ttl_imposto DECIMAL(10,2),
-    alqt_imposto INT,
-    tipo INT
+	id_taxa INT PRIMARY KEY not null,
+    ttl_item DECIMAL(10,2) not null,
+    ttl_imposto DECIMAL(10,2) not null,
+    alqt_imposto INT not null,
+    tipo INT not null
 );
-
-CREATE TABLE IF NOT EXISTS dim_valores (
-	id_valores int primary key,
-    sub_ttl DECIMAL(10,2) NOT NULL,
-    ttl_vendas_sem_imposto DECIMAL(10,2),
-    ttl_desconto DECIMAL(10,2),
-    id_taxa int not null,
-	FOREIGN KEY (id_taxa) REFERENCES dim_taxas(id_taxa)
-);
-
 
 CREATE TABLE IF NOT EXISTS dim_mesas (
 	num_mesa int primary key,
@@ -65,7 +55,9 @@ CREATE TABLE IF NOT EXISTS fato_comandas (
     dh_atu_comanda_utc DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     dh_atu_comanda_lcl DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     qtd_clientes INT NOT NULL,
-    id_valores int not null,
+    sub_ttl DECIMAL(10,2) NOT NULL,
+    ttl_vendas_sem_imposto DECIMAL(10,2),
+    ttl_desconto DECIMAL(10,2),
     ttl_comanda DECIMAL(10,2) NOT NULL,
     ttl_pago DECIMAL(10,2),
     ttl_devedor DECIMAL(10,2),
@@ -74,10 +66,11 @@ CREATE TABLE IF NOT EXISTS fato_comandas (
     num_funcionario INT NOT NULL,
     valor_servico decimal(10,2),
     forma_pagamento varchar(100),
+    id_taxa int not null,
+	FOREIGN KEY (id_taxa) REFERENCES dim_taxas(id_taxa),
     FOREIGN KEY (id_local) REFERENCES dim_local(id_local),
 	FOREIGN KEY (num_comanda) REFERENCES dim_comanda(num_comanda),
     FOREIGN KEY (num_mesa) REFERENCES dim_mesas(num_mesa),
-    FOREIGN KEY (id_valores) REFERENCES dim_valores(id_valores),
     FOREIGN KEY (id_data_comercio) REFERENCES dim_data_comercio(id_data_comercio),
     FOREIGN KEY (num_funcionario) REFERENCES dim_funcionario(num_funcionario)
 );
