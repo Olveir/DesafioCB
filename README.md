@@ -166,7 +166,7 @@ A abordagem escolhida para a modelagem de dados foi o Esquema Estrela/Floco de n
 
 Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os Itens (guestCheckLineItemId). 
 
-* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), valor total da comanda (ttl_comanda), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
+* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), o sub total da conta (sub_ttl), o valor total de vendas não tributáveis (ttl_vendas_sem_imposto), o valor total de desconto (ttl_desconto), o valor total da comanda (ttl_comanda), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
 
 * **fato_item**: Contém uma linha para cada item vendido. Suas métricas incluem o número do centro de receita (num_centro_receita), datas de atualização (dh_atu), número da estação de trabalho (num_estacao_trabalho), o valor e quantidade de exibição do item (ttl_item_exib, qtd_item_exib), valor e quantidade agregada do item (ttl_item_agg, qtd_item_agg), discount (desconto) e o errorCode (codigo_erro) 
 
