@@ -5,9 +5,9 @@
 ### 1. Descrição do esquema JSON 
 
 O esquema do JSON representa um registro detalhado de transações. 
-A estrutura geral contém dados da data de geração do registro, um identificador da loja e um lista (array) referente a comanda. 
+A estrutura geral contém dados da data de geração do registro, um identificador da loja e uma lista (array) referente a comanda. 
 
-Dentro da lista "GuestChecks", os objetos são encontrados dentro de um dicionário que descrevem a comanda com uso de identificadores e informações referente ao estado, valores e contexto da comanda. Possui também outras duas listas sendo elas: "taxes" e "detailLines".
+Dentro da lista "GuestChecks", o objeto/dicionário descreve a comanda com uso de identificadores e informações referente ao estado, valores e contexto da comanda. Possui também outras duas listas sendo elas: "taxes" e "detailLines".
 
 A lista "taxes" é uma lista de dicionários assim como a lista "GuestChecks" e "detailLines". Ela possui todos os detalhes dos impostos aplicados na conta.
 
@@ -125,7 +125,7 @@ Cada objeto dentro do array, detalha um pedido.
 
     "dspQty": integer -> Quantidade.
 
-    "aggTtl": integer -> Valor total agregado do item (preço unitário x quantidade).
+    "aggTtl": numeric ou decimal -> Valor total agregado do item (preço unitário x quantidade).
 
     "aggQty": integer -> Quantidade agregada.
 
@@ -166,7 +166,7 @@ A abordagem escolhida para a modelagem de dados foi o Esquema Estrela/Floco de n
 
 Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os Itens (guestCheckLineItemId). 
 
-* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), o sub total da comanda (sub_ttl), o valor total de vendas tributáveis e não tributáveis (ttl_vendas_tributaveis, ttl_vendas_sem_imposto), o valor total de desconto aplicado (ttl_desconto), o valor total da comanda (ttl_comanda), o valor total de imposto coletado (ttl_imposto), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
+* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), o sub total da comanda (sub_ttl), o valor total de vendas tributáveis e não tributáveis (ttl_vendas_tributaveis, ttl_vendas_nao_tributaveis), o valor total de desconto aplicado (ttl_desconto), o valor total da comanda (ttl_comanda), o valor total de imposto coletado (ttl_imposto), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
 
 * **fato_item**: Contém uma linha para cada item vendido. Suas métricas incluem o número do centro de receita (num_centro_receita), datas de atualização (dh_atu), número da estação de trabalho (num_estacao_trabalho), o valor e quantidade de exibição do item (ttl_item_exib, qtd_item_exib), valor e quantidade agregada do item (ttl_item_agg, qtd_item_agg), discount (desconto) e o errorCode (codigo_erro) 
 
@@ -192,13 +192,15 @@ Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os 
 
 #### Relações
 
+As tabelas Fato são conectadas às tabelas Dimensão através de chaves estrangeiras, pensados em reduzir a quantidade de joins durante a análise dos dados.
+
 Como o JSON fornecido corresponde a um determinado pedido com um único item, referente a um único item de menu, a tabela fato_item é considerada uma tabela ponte entre a fato_comandas e a dim_item_menu. Pois uma comanda pode ter vários itens e cada item supostamente pode ser pedido em outras comandas, e esse mesmo item vai sempre corresponder a um único item de menu.
 
 #### Justificativa
 
 Escolhi o esquema Estrela/Floco de neve pois esses modelos foram projetados pensando em otimizar consultas analiticas e em serem eficazes para responder perguntas de negócio. Isso faz com que operações de agregação como "SUM", "COUNT" e junções "JOIN" sejam mais rápidas e perfomáticas, acelerando e facilitando a exploração de grandes volumes de dados.
 
-E também é um modelo que permite grande escalabilidade e manutenibilidade do banco de dados, pois se for necessário adicionar algum campo ou algum atributo, é só adicionar uma nova coluna e incluir a sua chave na tabela fato, sem precisar analisar e reestruturar as tabelas existentes.
+E também é um modelo que permite grande escalabilidade e manutenibilidade do banco de dados, pois se for necessário adicionar algum campo ou algum atributo, é só adicionar uma nova coluna ou tabela dimensão e incluir a sua chave na tabela fato, sem precisar analisar e reestruturar as tabelas existentes.
 
 #### Preocupações e consequências
 
@@ -226,7 +228,7 @@ Os dados seriam armazenados nessa estrutura:
 
 `\datalake\bronze\files\Transactions\loja_storeId\dados_YYYYMMDD.json`
 
-Escolhi esse formato para facilitar a questão de ordenação e auditoria dos dados. Os dados seriam obtidos por meio dos endpoints em que cada um deles teria sua própria pasta, e dentro dessa pasta os dados seriam divididos pelo id da loja "storeId", criando assim a mascara da pasta, e o arquivo gerado teria a mascara de ano, mês e dia correspondente ao "busId". Esse formato iria facilitar o ordenamento por data e também por loja, agilizando a busca de um dado de uma loja específica em um dia específico. Após a armazenagem dos dados, os dados passariam por um tratamento para serem carregados nas tabelas e a cada etapa de tratamento eles seriam colocados em pastas diferentes sendo "silver" para dados intermediários prontos para análise exploratória, e "gold" para dados refinados prontos para serem aplicados em ferramentas de BI e dashboards.
+Escolhi esse formato para facilitar a questão de ordenação e auditoria dos dados. Os dados seriam obtidos por meio dos endpoints em que cada um deles teria sua própria pasta, dentro dessa pasta os dados seriam divididos pelo id da loja "storeId", criando assim a máscara da pasta, e o arquivo gerado teria a máscara de ano, mês e dia correspondente ao "busId". Esse formato iria facilitar o ordenamento por data e também por loja, agilizando a busca de um dado de uma loja específica em um dia específico. Após a armazenagem dos dados, os dados passariam por um tratamento para serem carregados nas tabelas e a cada etapa de tratamento eles seriam colocados em pastas diferentes sendo "silver" para dados intermediários prontos para análise exploratória, e "gold" para dados refinados prontos para serem aplicados em ferramentas de BI e dashboards.
 
 ### 3. Implicação da alteração na resposta do endpoint
 
