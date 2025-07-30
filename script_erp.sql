@@ -29,8 +29,6 @@ CREATE TABLE IF NOT EXISTS dim_comanda (
 
 CREATE TABLE IF NOT EXISTS dim_taxas (
 	id_taxa INT PRIMARY KEY not null,
-    ttl_item DECIMAL(10,2) not null,
-    ttl_imposto DECIMAL(10,2) not null,
     alqt_imposto INT not null,
     tipo INT not null
 );
@@ -56,18 +54,18 @@ CREATE TABLE IF NOT EXISTS fato_comandas (
     dh_atu_comanda_lcl DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     qtd_clientes INT NOT NULL,
     sub_ttl DECIMAL(10,2) NOT NULL,
-    ttl_vendas_sem_imposto DECIMAL(10,2),
+    ttl_vendas_nao_tributaveis DECIMAL(10,2),
     ttl_desconto DECIMAL(10,2),
     ttl_comanda DECIMAL(10,2) NOT NULL,
     ttl_pago DECIMAL(10,2),
     ttl_devedor DECIMAL(10,2),
+    ttl_vendas_tributaveis DECIMAL(10,2) not null,
+    ttl_imposto DECIMAL(10,2) not null,
     num_centro_receita INT NOT NULL,
     num_mesa INT NOT NULL,
     num_funcionario INT NOT NULL,
     valor_servico decimal(10,2),
     forma_pagamento varchar(100),
-    id_taxa int not null,
-	FOREIGN KEY (id_taxa) REFERENCES dim_taxas(id_taxa),
     FOREIGN KEY (id_local) REFERENCES dim_local(id_local),
 	FOREIGN KEY (num_comanda) REFERENCES dim_comanda(num_comanda),
     FOREIGN KEY (num_mesa) REFERENCES dim_mesas(num_mesa),
@@ -92,7 +90,7 @@ CREATE TABLE IF NOT EXISTS dim_funcionario_item (
 CREATE TABLE IF NOT EXISTS dim_item_menu (
     id_item_menu INT PRIMARY KEY,
     modificado BOOLEAN NOT NULL,
-    taxas_ativas int,
+    taxas_ativas int not null,
     categoria_preco INT NOT NULL,
     FOREIGN KEY (taxas_ativas) REFERENCES dim_taxas(id_taxa)
 );

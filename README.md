@@ -87,7 +87,7 @@ Cada objeto dentro do array, detalha um pedido.
 
     "taxNum": integer -> Identificador da taxa.
 
-    "txblSlsTtl": numeric ou decimal -> Valor do item antes do desconto.
+    "txblSlsTtl": numeric ou decimal -> Valor total de vendas tributáveis.
 
     "taxCollTtl": numeric ou decimal -> Total do imposto coletado.
 
@@ -166,7 +166,7 @@ A abordagem escolhida para a modelagem de dados foi o Esquema Estrela/Floco de n
 
 Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os Itens (guestCheckLineItemId). 
 
-* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), o sub total da comanda (sub_ttl), o valor total de vendas não tributáveis (ttl_vendas_sem_imposto), o valor total de desconto aplicado (ttl_desconto), o valor total da comanda (ttl_comanda), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
+* **fato_comandas**: Contém uma linha para cada comanda. Ela inclui as datas de atualização e transação (dh_atu_comanda, dh_ultima_transacao), o sub total da comanda (sub_ttl), o valor total de vendas tributáveis e não tributáveis (ttl_vendas_tributaveis, ttl_vendas_sem_imposto), o valor total de desconto aplicado (ttl_desconto), o valor total da comanda (ttl_comanda), o valor total de imposto coletado (ttl_imposto), o total que foi pago e o total devedor (ttl_pago, ttl_devedor), quantidade de clientes da comanda (qtd_clientes), o número do centro de receita (num_centro_receita), o serviceCharge (valor_servico) e o tenderMedia (forma_pagamento).
 
 * **fato_item**: Contém uma linha para cada item vendido. Suas métricas incluem o número do centro de receita (num_centro_receita), datas de atualização (dh_atu), número da estação de trabalho (num_estacao_trabalho), o valor e quantidade de exibição do item (ttl_item_exib, qtd_item_exib), valor e quantidade agregada do item (ttl_item_agg, qtd_item_agg), discount (desconto) e o errorCode (codigo_erro) 
 
@@ -182,7 +182,7 @@ Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os 
 
 * dim_local: Descreve o local, com a referência e a data e hora de geração dos dados.
 
-* dim_taxas: Descreve as taxas associadas aos valores e aos itens. Isso é feito usando o valor total do item, o valor total do imposto, a aliquota e o tipo de calculo.
+* dim_taxas: Descreve as taxas associadas aos valores dos itens. Isso é feito usando a aliquota e o tipo de calculo.
 
 * dim_detalhe_item: Descreve os atributos do item em si. Possui o número do detalhe do tipo e da categoria do item, as datas de atualização e o número da rodada de serviço que o item foi pedido.
 
@@ -192,7 +192,7 @@ Foi criada duas tabelas fato, uma para as comandas (GuestCheck) e outra para os 
 
 #### Relações
 
-Como o JSON fornecido corresponde a um determinado pedido com um único item, referente a um único item de menu, a tabela fato_item é considerada uma tabela ponte entre a fato_comandas e a dim_detalhe_item. Pois uma comanda pode ter vários itens e cada item supostamente pode ser pedido em outras comandas, e esse mesmo item vai sempre corresponder a um único item de menu.
+Como o JSON fornecido corresponde a um determinado pedido com um único item, referente a um único item de menu, a tabela fato_item é considerada uma tabela ponte entre a fato_comandas e a dim_item_menu. Pois uma comanda pode ter vários itens e cada item supostamente pode ser pedido em outras comandas, e esse mesmo item vai sempre corresponder a um único item de menu.
 
 #### Justificativa
 
@@ -226,7 +226,7 @@ Os dados seriam armazenados nessa estrutura:
 
 `\datalake\bronze\files\Transactions\loja_storeId\dados_YYYYMMDD.json`
 
-Escolhi esse formato para facilitar a questão de ordenação e auditoria dos dados. Os dados seriam obtidos por meio dos endpoints em que cada um deles teria sua própria pasta, e dentro dessa pasta os dados seriam divididos pelo id da loja "storeId", criando assim a mascara da pasta, e o arquivo gerado teria a mascara de ano, mês e dia correspondente ao "busId". Esse formato iria facilitar o ordenamento por data e também por loja, agilizando a busca de um dado de uma loja específica em um dia específico. Após a armazenagem dos dados, os dados passariam por um tratamento para serem carregados nas tabelas e a cada tratamento eles seriam colocados em pastas diferentes sendo "silver" para dados intermediários prontos para análise exploratória, e "gold" para dados refinados prontos para serem aplicados em ferramentas de BI e dashboards.
+Escolhi esse formato para facilitar a questão de ordenação e auditoria dos dados. Os dados seriam obtidos por meio dos endpoints em que cada um deles teria sua própria pasta, e dentro dessa pasta os dados seriam divididos pelo id da loja "storeId", criando assim a mascara da pasta, e o arquivo gerado teria a mascara de ano, mês e dia correspondente ao "busId". Esse formato iria facilitar o ordenamento por data e também por loja, agilizando a busca de um dado de uma loja específica em um dia específico. Após a armazenagem dos dados, os dados passariam por um tratamento para serem carregados nas tabelas e a cada etapa de tratamento eles seriam colocados em pastas diferentes sendo "silver" para dados intermediários prontos para análise exploratória, e "gold" para dados refinados prontos para serem aplicados em ferramentas de BI e dashboards.
 
 ### 3. Implicação da alteração na resposta do endpoint
 
